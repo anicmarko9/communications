@@ -2,27 +2,17 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
-	"os"
+
+	"communications/internal/config"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	godotenv.Load(".env")
+	cfg := config.LoadConfig()
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		log.Fatal("$PORT must be set")
-	}
-	mode := os.Getenv("GIN_MODE")
-	if mode == "" {
-		log.Fatal("$GIN_MODE must be set")
-	}
-
-	if mode == "release" {
+	if cfg.GinMode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	} else {
 		gin.SetMode(gin.DebugMode)
@@ -36,7 +26,6 @@ func main() {
 		})
 	})
 
-	fmt.Println("Starting server on port " + port)
-
-	router.Run(":" + port)
+	fmt.Println("Starting server on port " + cfg.Port)
+	router.Run(":" + cfg.Port)
 }
