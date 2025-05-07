@@ -17,14 +17,19 @@ FROM alpine:3.21.3
 WORKDIR /home/app
 
 ARG PORT \
-  GIN_MODE
+  THROTTLE_TTL \
+  THROTTLE_LIMIT \
+  GIN_MODE \
+  ALLOWED_ORIGINS
 
 ENV PORT=$PORT \
-  GIN_MODE=$GIN_MODE
+  THROTTLE_TTL=$THROTTLE_TTL \
+  THROTTLE_LIMIT=$THROTTLE_LIMIT \
+  GIN_MODE=$GIN_MODE \
+  ALLOWED_ORIGINS=$ALLOWED_ORIGINS
 
 RUN apk --no-cache add ca-certificates openssh-server && \
   mkdir -p /root/.ssh && \
-  echo "root:Docker!" | chpasswd && \
   ssh-keygen -A
 
 COPY --from=builder /home/app/ssh/authorized_keys /root/.ssh/authorized_keys
@@ -40,9 +45,12 @@ EXPOSE $PORT 2222
 CMD ["/bin/sh", "-c", "/usr/sbin/sshd -D & ./main.exe"]
 
 
-# docker build --build-arg PORT="5000" `
-# --build-arg GIN_MODE="release" `
-# -t communications:go_1.24.2 --no-cache .
+# docker build -t communications:go_1.24.2 --no-cache . `
+# --build-arg PORT="5000" `
+# --build-arg THROTTLE_TTL="60000" `
+# --build-arg THROTTLE_LIMIT="10" `
+# --build-arg GIN_MODE="debug" `
+# --build-arg ALLOWED_ORIGINS="http://localhost:3000"
 
 # docker run -d -p 5000:5000 -p 2222:2222 communications:go_1.24.2
 # ssh -i "ssh/id_rsa" -p 2222 root@localhost
