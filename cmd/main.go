@@ -2,12 +2,14 @@ package main
 
 import (
 	"communications/internal/config"
+	"communications/internal/database"
 	"communications/internal/handlers"
 	"communications/internal/server"
 )
 
 func main() {
 	cfg := config.Load()
-	router := handlers.Init(cfg)
+	db := database.Connect(cfg)
+	router := handlers.Init(cfg, db)
 	server.Listen(cfg.Port, router)
 }

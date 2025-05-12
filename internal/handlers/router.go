@@ -8,6 +8,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/time/rate"
 
 	"communications/internal/config"
@@ -20,7 +21,11 @@ var (
 	mu       sync.Mutex
 )
 
-func Init(cfg *config.Config) *gin.Engine {
+type DatabaseHandler struct {
+	Pool *pgxpool.Pool
+}
+
+func Init(cfg *config.Config, db *pgxpool.Pool) *gin.Engine {
 	if cfg.GinMode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	} else {
@@ -30,14 +35,16 @@ func Init(cfg *config.Config) *gin.Engine {
 	router := gin.Default()
 
 	router.Use(setCORS(cfg))
-	router.Use(setHelmet())
+	router.Use(setSecurityHeaders())
 	router.Use(setCompression())
 	router.Use(setBodySize())
 	router.Use(setRateLimiter(cfg))
 
+	handler := &DatabaseHandler{Pool: db}
+
 	v1 := router.Group("/api/v1")
 
-	v1.GET("/health", HealthHandler)
+	v1.GET("/health", handler.HealthHandler)
 
 	return router
 }
@@ -53,7 +60,7 @@ func setCORS(cfg *config.Config) gin.HandlerFunc {
 	})
 }
 
-func setHelmet() gin.HandlerFunc {
+func setSecurityHeaders() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("X-Content-Type-Options", "nosniff")
 		c.Writer.Header().Set("X-Frame-Options", "DENY")
