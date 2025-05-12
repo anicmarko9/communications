@@ -20,7 +20,7 @@ type Config struct {
 	DatabaseUser     string
 	DatabasePassword string
 	DatabaseName     string
-	DatabaseSSL      bool
+	DatabaseSSL      string
 }
 
 func Load() *Config {
@@ -59,6 +59,6 @@ func Load() *Config {
 		DatabaseUser:     os.Getenv("POSTGRES_USER"),
 		DatabasePassword: os.Getenv("POSTGRES_PASSWORD"),
 		DatabaseName:     os.Getenv("POSTGRES_DB"),
-		DatabaseSSL:      os.Getenv("POSTGRES_SSL") == "true",
+		DatabaseSSL:      os.Getenv("POSTGRES_SSL"),
 	}
 }
