@@ -30,7 +30,7 @@ func Init(cfg *config.Config) *gin.Engine {
 	router := gin.Default()
 
 	router.Use(setCORS(cfg))
-	router.Use(setHelmet())
+	router.Use(setSecurityHeaders())
 	router.Use(setCompression())
 	router.Use(setBodySize())
 	router.Use(setRateLimiter(cfg))
@@ -53,7 +53,7 @@ func setCORS(cfg *config.Config) gin.HandlerFunc {
 	})
 }
 
-func setHelmet() gin.HandlerFunc {
+func setSecurityHeaders() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("X-Content-Type-Options", "nosniff")
 		c.Writer.Header().Set("X-Frame-Options", "DENY")

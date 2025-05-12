@@ -1,13 +1,29 @@
 package services
 
 import (
-	"github.com/gin-gonic/gin"
+	"time"
+
+	"communications/internal/utils"
 )
 
-func Health() map[string]any {
-	return gin.H{"status": "ok", "message": "success"}
+func Health() utils.APIResponse[utils.DefaultResponse] {
+	return utils.APIResponse[utils.DefaultResponse]{
+		Meta: utils.Meta{
+			Status:    utils.StatusSuccess,
+			Message:   "Server is up and running.",
+			Timestamp: time.Now().UTC().Format(time.RFC3339),
+		},
+		Data: utils.DefaultResponse{},
+	}
 }
 
-func Throttler() map[string]any {
-	return gin.H{"status": "error", "message": "rate limit exceeded"}
+func Throttler() utils.APIResponse[utils.DefaultResponse] {
+	return utils.APIResponse[utils.DefaultResponse]{
+		Meta: utils.Meta{
+			Status:    utils.StatusError,
+			Message:   "Too many requests. Please try again later.",
+			Timestamp: time.Now().UTC().Format(time.RFC3339),
+		},
+		Data: utils.DefaultResponse{},
+	}
 }
