@@ -2,23 +2,18 @@ package handlers
 
 import (
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/patrickmn/go-cache"
 	"golang.org/x/time/rate"
 
 	"communications/internal/config"
 	"communications/internal/services"
 	"communications/internal/utils"
-)
-
-var (
-	limiters = make(map[string]*rate.Limiter)
-	mu       sync.Mutex
 )
 
 type DatabaseHandler struct {
@@ -82,18 +77,18 @@ func setBodySize() gin.HandlerFunc {
 	}
 }
 
+var rateLimiterCache = cache.New(time.Minute, 5*time.Minute)
+
 func getRateLimiter(ip string, eventsPerSecond rate.Limit, burst int) *rate.Limiter {
-	mu.Lock()
-	defer mu.Unlock()
-
-	limiter, exists := limiters[ip]
-
-	if !exists {
-		limiter = rate.NewLimiter(eventsPerSecond, burst)
-		limiters[ip] = limiter
+	limiter, found := rateLimiterCache.Get(ip)
+	if found {
+		return limiter.(*rate.Limiter)
 	}
 
-	return limiter
+	limiter = rate.NewLimiter(eventsPerSecond, burst)
+	rateLimiterCache.Set(ip, limiter, cache.DefaultExpiration)
+
+	return limiter.(*rate.Limiter)
 }
 
 func setRateLimiter(cfg *config.Config) gin.HandlerFunc {
