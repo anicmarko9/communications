@@ -1,0 +1,43 @@
+name: go-communications
+
+networks:
+  communications:
+    name: communications
+    driver: bridge
+
+volumes:
+  postgres_volume:
+    name: postgres_volume
+    driver: local
+
+services:
+  postgres:
+    container_name: PostgreSQL
+    image: 'postgres:17-alpine'
+    ports:
+      - ${POSTGRES_PORT}:5432
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    networks:
+      - communications
+    volumes:
+      - postgres_volume:/var/lib/postgresql/data
+
+  go:
+    container_name: Go
+    restart: on-failure
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: 'go-communications:1.24.2-alpine'
+    env_file:
+      - .env
+    ports:
+      - ${PORT}:${PORT}
+      - 2222:2222
+    depends_on:
+      - postgres
+    networks:
+      - communications
