@@ -47,6 +47,7 @@ RUN apk --no-cache add ca-certificates openssh-server && \
 COPY --from=builder /home/app/ssh/authorized_keys /root/.ssh/authorized_keys
 COPY --from=builder /home/app/ssh/sshd_config /etc/ssh/.
 COPY --from=builder /home/app/main.exe ./main.exe
+COPY --from=builder /home/app/migrations ./migrations
 
 RUN chmod +x ./main.exe && \
   chmod u=rwx /root/.ssh && \
@@ -57,7 +58,7 @@ EXPOSE $PORT 2222
 CMD ["/bin/sh", "-c", "/usr/sbin/sshd -D & ./main.exe"]
 
 
-# docker build -t communications:go_1.24.2 --no-cache . `
+# docker build -t go-communications:1.24.2-alpine --no-cache . `
 # --build-arg PORT="5000" `
 # --build-arg THROTTLE_TTL="60000" `
 # --build-arg THROTTLE_LIMIT="10" `
@@ -70,5 +71,5 @@ CMD ["/bin/sh", "-c", "/usr/sbin/sshd -D & ./main.exe"]
 # --build-arg POSTGRES_DB="local_db" `
 # --build-arg POSTGRES_SSL="false"
 
-# docker run -d -p 5000:5000 -p 2222:2222 communications:go_1.24.2
+# docker run -d -p 5000:5000 -p 2222:2222 go-communications:1.24.2-alpine
 # ssh -i "ssh/id_rsa" -p 2222 root@localhost
