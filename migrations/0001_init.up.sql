@@ -1,35 +1,35 @@
 CREATE TABLE
   "clients" (
     "id" uuid NOT NULL,
-    "name" CHARACTER VARYING NOT NULL,
-    "email" CHARACTER VARYING NOT NULL,
-    "phone" CHARACTER VARYING NOT NULL,
-    "website" CHARACTER VARYING,
-    "verified" BOOLEAN NOT NULL DEFAULT false,
-    "token" CHARACTER VARYING,
+    "name" VARCHAR(31) NOT NULL,
+    "email" VARCHAR(255) NOT NULL,
+    "phone" VARCHAR(15) NOT NULL,
+    "website" VARCHAR(127),
     "created_at" TIMESTAMP NOT NULL DEFAULT now (),
     "updated_at" TIMESTAMP NOT NULL DEFAULT now (),
     "deleted_at" TIMESTAMP,
     CONSTRAINT "PK_Client" PRIMARY KEY ("id")
   );
 
-CREATE INDEX "IDX_Client_phone" ON "clients" ("phone");
+ALTER TABLE "clients"
+ADD CONSTRAINT "UQ_Client_email" UNIQUE ("email");
 
-CREATE INDEX "IDX_Client_email" ON "clients" ("email");
+ALTER TABLE "clients"
+ADD CONSTRAINT "UQ_Client_phone" UNIQUE ("phone");
 
 CREATE TABLE
   "leads" (
     "id" SERIAL NOT NULL,
-    "type" CHARACTER VARYING NOT NULL,
+    "type" VARCHAR(15) NOT NULL,
     "datetime" TIMESTAMP NOT NULL DEFAULT now (),
-    "patient_name" CHARACTER VARYING,
-    "patient_email" CHARACTER VARYING,
-    "patient_phone" CHARACTER VARYING,
+    "name" VARCHAR(31),
+    "email" VARCHAR(255),
+    "phone" VARCHAR(15),
     "client_id" uuid NOT NULL,
     CONSTRAINT "PK_Lead" PRIMARY KEY ("id")
   );
 
-CREATE INDEX "IDX_Lead_client_id" ON "leads" ("client_id");
-
 ALTER TABLE "leads"
 ADD CONSTRAINT "FK_Lead_Client" FOREIGN KEY ("client_id") REFERENCES "clients" ("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+CREATE INDEX "IDX_Lead_client_id_datetime" ON "leads" ("client_id", "datetime");

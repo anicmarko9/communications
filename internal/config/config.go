@@ -21,6 +21,9 @@ type Config struct {
 	DatabasePassword string
 	DatabaseName     string
 	DatabaseSSL      string
+	AzureURL         string
+	EmailFrom        string
+	SMSFrom          string
 }
 
 func Load() *Config {
@@ -38,6 +41,9 @@ func Load() *Config {
 		"POSTGRES_PASSWORD",
 		"POSTGRES_DB",
 		"POSTGRES_SSL",
+		"AZURE_URL",
+		"EMAIL_FROM",
+		"SMS_FROM",
 	}
 
 	for _, key := range required {
@@ -60,5 +66,8 @@ func Load() *Config {
 		DatabasePassword: os.Getenv("POSTGRES_PASSWORD"),
 		DatabaseName:     os.Getenv("POSTGRES_DB"),
 		DatabaseSSL:      os.Getenv("POSTGRES_SSL"),
+		AzureURL:         os.Getenv("AZURE_URL"),
+		EmailFrom:        os.Getenv("EMAIL_FROM"),
+		SMSFrom:          os.Getenv("SMS_FROM"),
 	}
 }
