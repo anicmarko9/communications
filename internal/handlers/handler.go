@@ -11,8 +11,10 @@ import (
 	"communications/internal/utils"
 )
 
-func (dbHandler *DatabaseHandler) HealthHandler(c *gin.Context) {
-	if err := services.CheckHealth(dbHandler.Pool); err != nil {
+func (h *Handler) HealthHandler(c *gin.Context) {
+	service := h.newService()
+
+	if err := service.CheckHealth(); err != nil {
 		utils.Reject(c, http.StatusInternalServerError, "Database connection failed.")
 		return
 	}
@@ -27,7 +29,9 @@ func (dbHandler *DatabaseHandler) HealthHandler(c *gin.Context) {
 	})
 }
 
-func (dbHandler *DatabaseHandler) LeadHandler(c *gin.Context) {
+func (h *Handler) LeadHandler(c *gin.Context) {
+	service := h.newService()
+
 	id := c.Param("id")
 	if _, err := uuid.Parse(id); err != nil {
 		utils.Reject(c, http.StatusBadRequest, "id must be a UUID")
@@ -45,8 +49,8 @@ func (dbHandler *DatabaseHandler) LeadHandler(c *gin.Context) {
 		return
 	}
 
-	emailError := services.SendEmail(dbHandler.Pool, dbHandler.Cfg)
-	smsError := services.SendSMS(dbHandler.Pool, dbHandler.Cfg)
+	emailError := service.SendEmail()
+	smsError := service.SendSMS()
 
 	if emailError != nil && smsError != nil {
 		utils.Reject(c, http.StatusInternalServerError, "Failed to send Email and SMS.")
@@ -61,4 +65,8 @@ func (dbHandler *DatabaseHandler) LeadHandler(c *gin.Context) {
 		},
 		Data: utils.DefaultResponse{},
 	})
+}
+
+func (h *Handler) newService() *services.Service {
+	return services.NewService(h.Pool, h.Cfg)
 }

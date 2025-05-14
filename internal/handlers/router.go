@@ -15,7 +15,7 @@ import (
 	"communications/internal/utils"
 )
 
-type DatabaseHandler struct {
+type Handler struct {
 	Pool *pgxpool.Pool
 	Cfg  *config.Config
 }
@@ -35,7 +35,7 @@ func Init(cfg *config.Config, db *pgxpool.Pool) *gin.Engine {
 	router.Use(setBodySize())
 	router.Use(setRateLimiter(cfg))
 
-	handler := &DatabaseHandler{Pool: db, Cfg: cfg}
+	handler := &Handler{Pool: db, Cfg: cfg}
 
 	v1 := router.Group("/api/v1")
 
