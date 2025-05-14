@@ -12,12 +12,12 @@ import (
 	"golang.org/x/time/rate"
 
 	"communications/internal/config"
-	"communications/internal/services"
 	"communications/internal/utils"
 )
 
 type DatabaseHandler struct {
 	Pool *pgxpool.Pool
+	Cfg  *config.Config
 }
 
 func Init(cfg *config.Config, db *pgxpool.Pool) *gin.Engine {
@@ -35,11 +35,13 @@ func Init(cfg *config.Config, db *pgxpool.Pool) *gin.Engine {
 	router.Use(setBodySize())
 	router.Use(setRateLimiter(cfg))
 
-	handler := &DatabaseHandler{Pool: db}
+	handler := &DatabaseHandler{Pool: db, Cfg: cfg}
 
 	v1 := router.Group("/api/v1")
 
 	v1.GET("/health", handler.HealthHandler)
+
+	v1.POST("/leads/:id", handler.LeadHandler)
 
 	return router
 }
@@ -100,7 +102,15 @@ func setRateLimiter(cfg *config.Config) gin.HandlerFunc {
 		limiter := getRateLimiter(ip, eventsPerSecond, burst)
 
 		if !limiter.Allow() {
-			c.AbortWithStatusJSON(http.StatusTooManyRequests, services.Throttler())
+			c.AbortWithStatusJSON(http.StatusTooManyRequests, utils.APIResponse[utils.DefaultResponse]{
+				Meta: utils.Meta{
+					Status:    utils.StatusError,
+					Message:   "Too many requests. Please try again later.",
+					Timestamp: utils.GetCurrentTimestamp(),
+				},
+				Data: utils.DefaultResponse{},
+			})
+
 			return
 		}
 

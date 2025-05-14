@@ -3,6 +3,7 @@ package utils
 import (
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Number interface {
@@ -32,4 +33,8 @@ func StringToNumber[T Number](value string) T {
 
 	var zero T
 	return zero
+}
+
+func GetCurrentTimestamp() string {
+	return time.Now().UTC().Format(time.RFC3339)
 }

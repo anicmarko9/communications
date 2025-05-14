@@ -1,11 +1,11 @@
-ALTER TABLE "leads" DROP CONSTRAINT "FK_Lead_Client";
+DROP INDEX "public"."IDX_Lead_client_id_datetime";
 
-DROP INDEX "public"."IDX_Lead_client_id";
+ALTER TABLE "leads" DROP CONSTRAINT "FK_Lead_Client";
 
 DROP TABLE "leads";
 
-DROP INDEX "public"."IDX_Client_email";
+ALTER TABLE "clients" DROP CONSTRAINT "UQ_Client_email";
 
-DROP INDEX "public"."IDX_Client_phone";
+ALTER TABLE "clients" DROP CONSTRAINT "UQ_Client_phone";
 
 DROP TABLE "clients";

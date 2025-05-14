@@ -1,5 +1,7 @@
 package utils
 
+import "github.com/gin-gonic/gin"
+
 type Status string
 
 const (
@@ -18,4 +20,15 @@ type Meta struct {
 type APIResponse[T any] struct {
 	Meta Meta `json:"meta"`
 	Data T    `json:"data"`
+}
+
+func Reject(c *gin.Context, code int, message string) {
+	c.JSON(code, APIResponse[DefaultResponse]{
+		Meta: Meta{
+			Status:    StatusError,
+			Message:   message,
+			Timestamp: GetCurrentTimestamp(),
+		},
+		Data: DefaultResponse{},
+	})
 }

@@ -26,7 +26,10 @@ ARG PORT \
   POSTGRES_USER \
   POSTGRES_PASSWORD \
   POSTGRES_DB \
-  POSTGRES_SSL
+  POSTGRES_SSL \
+  AZURE_URL \
+  EMAIL_FROM \
+  SMS_FROM
 
 ENV PORT=$PORT \
   THROTTLE_TTL=$THROTTLE_TTL \
@@ -38,7 +41,10 @@ ENV PORT=$PORT \
   POSTGRES_USER=$POSTGRES_USER \
   POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
   POSTGRES_DB=$POSTGRES_DB \
-  POSTGRES_SSL=$POSTGRES_SSL
+  POSTGRES_SSL=$POSTGRES_SSL \
+  AZURE_URL=$AZURE_URL \
+  EMAIL_FROM=$EMAIL_FROM \
+  SMS_FROM=$SMS_FROM
 
 RUN apk --no-cache add ca-certificates openssh-server && \
   mkdir -p /root/.ssh && \
@@ -70,6 +76,9 @@ CMD ["/bin/sh", "-c", "/usr/sbin/sshd -D & ./main.exe"]
 # --build-arg POSTGRES_PASSWORD="asdfghjkl123" `
 # --build-arg POSTGRES_DB="local_db" `
 # --build-arg POSTGRES_SSL="false"
+# --build-arg AZURE_URL=""
+# --build-arg EMAIL_FROM=""
+# --build-arg SMS_FROM=""
 
 # docker run -d -p 5000:5000 -p 2222:2222 go-communications:1.24.2-alpine
 # ssh -i "ssh/id_rsa" -p 2222 root@localhost
