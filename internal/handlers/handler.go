@@ -11,6 +11,8 @@ import (
 	"communications/internal/utils"
 )
 
+// Handles GET requests to check the application's health status.
+// Pings the database and returns a success or error response based on the connectivity.
 func (h *Handler) HealthHandler(c *gin.Context) {
 	service := h.newService()
 
@@ -29,6 +31,9 @@ func (h *Handler) HealthHandler(c *gin.Context) {
 	})
 }
 
+// Handles POST requests for incoming leads.
+// Validates the request body, and triggers Email and SMS notifications to the client.
+// Returns appropriate success or error responses based on the outcome.
 func (h *Handler) LeadHandler(c *gin.Context) {
 	service := h.newService()
 
@@ -49,8 +54,8 @@ func (h *Handler) LeadHandler(c *gin.Context) {
 		return
 	}
 
-	emailError := service.SendEmail()
-	smsError := service.SendSMS()
+	emailError := service.SendEmail(&id, &body)
+	smsError := service.SendSMS(&id, &body)
 
 	if emailError != nil && smsError != nil {
 		utils.Reject(c, http.StatusInternalServerError, "Failed to send Email and SMS.")
@@ -67,6 +72,8 @@ func (h *Handler) LeadHandler(c *gin.Context) {
 	})
 }
 
+// Helper to create a new Service instance with the current DB pool and config.
+// Used to provide services with access to environment variables and the database.
 func (h *Handler) newService() *services.Service {
 	return services.NewService(h.Pool, h.Cfg)
 }

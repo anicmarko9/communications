@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+// Starts the HTTP server on the specified port and handles graceful shutdown on SIGINT or SIGTERM.
+// Used to ensure the server can be stopped cleanly without dropping in-flight requests.
 func Listen(port string, handler http.Handler) {
 	srv := &http.Server{
 		Addr:    ":" + port,
