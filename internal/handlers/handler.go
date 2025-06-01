@@ -11,8 +11,12 @@ import (
 	"communications/internal/utils"
 )
 
-func (dbHandler *DatabaseHandler) HealthHandler(c *gin.Context) {
-	if err := services.CheckHealth(dbHandler.Pool); err != nil {
+// Handles GET requests to check the application's health status.
+// Pings the database and returns a success or error response based on the connectivity.
+func (h *Handler) HealthHandler(c *gin.Context) {
+	service := h.newService()
+
+	if err := service.CheckHealth(); err != nil {
 		utils.Reject(c, http.StatusInternalServerError, "Database connection failed.")
 		return
 	}
@@ -27,7 +31,12 @@ func (dbHandler *DatabaseHandler) HealthHandler(c *gin.Context) {
 	})
 }
 
-func (dbHandler *DatabaseHandler) LeadHandler(c *gin.Context) {
+// Handles POST requests for incoming leads.
+// Validates the request body, and triggers Email and SMS notifications to the client.
+// Returns appropriate success or error responses based on the outcome.
+func (h *Handler) LeadHandler(c *gin.Context) {
+	service := h.newService()
+
 	id := c.Param("id")
 	if _, err := uuid.Parse(id); err != nil {
 		utils.Reject(c, http.StatusBadRequest, "id must be a UUID")
@@ -45,8 +54,8 @@ func (dbHandler *DatabaseHandler) LeadHandler(c *gin.Context) {
 		return
 	}
 
-	emailError := services.SendEmail(dbHandler.Pool, dbHandler.Cfg)
-	smsError := services.SendSMS(dbHandler.Pool, dbHandler.Cfg)
+	emailError := service.SendEmail(&id, &body)
+	smsError := service.SendSMS(&id, &body)
 
 	if emailError != nil && smsError != nil {
 		utils.Reject(c, http.StatusInternalServerError, "Failed to send Email and SMS.")
@@ -61,4 +70,10 @@ func (dbHandler *DatabaseHandler) LeadHandler(c *gin.Context) {
 		},
 		Data: utils.DefaultResponse{},
 	})
+}
+
+// Helper to create a new Service instance with the current DB pool and config.
+// Used to provide services with access to environment variables and the database.
+func (h *Handler) newService() *services.Service {
+	return services.NewService(h.Pool, h.Cfg)
 }

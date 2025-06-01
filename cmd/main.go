@@ -7,6 +7,7 @@ import (
 	"communications/internal/server"
 )
 
+// Entry point for the application.
 func main() {
 	cfg := config.Load()
 	db := database.Connect(cfg)

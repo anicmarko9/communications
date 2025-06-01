@@ -15,11 +15,16 @@ import (
 	"communications/internal/utils"
 )
 
-type DatabaseHandler struct {
+// Provides access to the database connection pool and configuration.
+// Used to give all route handlers access to .env variables and the DB pool.
+type Handler struct {
 	Pool *pgxpool.Pool
 	Cfg  *config.Config
 }
 
+// Sets up the Gin router with middleware (CORS, security headers, compression, body size, rate limiting),
+// applies API versioning and route definitions, and returns the configured Gin engine.
+// Used to initialize the HTTP server.
 func Init(cfg *config.Config, db *pgxpool.Pool) *gin.Engine {
 	if cfg.GinMode == "release" {
 		gin.SetMode(gin.ReleaseMode)
@@ -35,7 +40,7 @@ func Init(cfg *config.Config, db *pgxpool.Pool) *gin.Engine {
 	router.Use(setBodySize())
 	router.Use(setRateLimiter(cfg))
 
-	handler := &DatabaseHandler{Pool: db, Cfg: cfg}
+	handler := &Handler{Pool: db, Cfg: cfg}
 
 	v1 := router.Group("/api/v1")
 
@@ -46,6 +51,8 @@ func Init(cfg *config.Config, db *pgxpool.Pool) *gin.Engine {
 	return router
 }
 
+// Configures CORS middleware using allowed origins from config.
+// Ensures only trusted origins can access the API.
 func setCORS(cfg *config.Config) gin.HandlerFunc {
 	return cors.New(cors.Config{
 		AllowOrigins:     cfg.AllowedOrigins,
@@ -57,6 +64,8 @@ func setCORS(cfg *config.Config) gin.HandlerFunc {
 	})
 }
 
+// Adds basic security headers to all responses.
+// Helps protect against common web vulnerabilities.
 func setSecurityHeaders() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("X-Content-Type-Options", "nosniff")
@@ -67,10 +76,14 @@ func setSecurityHeaders() gin.HandlerFunc {
 	}
 }
 
+// Enables GZIP compression for all responses.
+// Reduces bandwidth usage for API clients.
 func setCompression() gin.HandlerFunc {
 	return gzip.Gzip(gzip.DefaultCompression)
 }
 
+// Limits the maximum size of incoming request bodies.
+// Prevents abuse by restricting large payloads (up to 25MB, suitable for handling PDF uploads).
 func setBodySize() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 25*utils.MB)
@@ -81,6 +94,8 @@ func setBodySize() gin.HandlerFunc {
 
 var rateLimiterCache = cache.New(time.Minute, 5*time.Minute)
 
+// Returns a rate limiter for the given IP address, creating one if it doesn't exist.
+// Used to enforce per-IP rate limiting.
 func getRateLimiter(ip string, eventsPerSecond rate.Limit, burst int) *rate.Limiter {
 	limiter, found := rateLimiterCache.Get(ip)
 	if found {
@@ -93,6 +108,8 @@ func getRateLimiter(ip string, eventsPerSecond rate.Limit, burst int) *rate.Limi
 	return limiter.(*rate.Limiter)
 }
 
+// Applies a rate limiter middleware to all requests based on client IP.
+// Returns HTTP 429 if the client exceeds the allowed request rate.
 func setRateLimiter(cfg *config.Config) gin.HandlerFunc {
 	eventsPerSecond := rate.Every(time.Duration(cfg.ThrottleTTL) * time.Second)
 	burst := cfg.ThrottleLimit

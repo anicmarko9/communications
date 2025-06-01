@@ -14,6 +14,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// Initializes a PostgreSQL connection pool, applies all pending SQL migrations, and verifies connectivity.
+// Used at application startup to ensure the database is ready and up-to-date before serving requests.
+// Returns a ready-to-use *pgxpool.Pool for database operations, or terminates the app on failure.
 func Connect(cfg *config.Config) *pgxpool.Pool {
 
 	connectionString := fmt.Sprintf(

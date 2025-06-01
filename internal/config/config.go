@@ -9,23 +9,28 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// Holds all environment variables and settings required to run the application.
+// Populated once at startup and used throughout the app for configuration.
 type Config struct {
-	Port             string
-	ThrottleTTL      int
-	ThrottleLimit    int
-	GinMode          string
-	AllowedOrigins   []string
-	DatabaseHost     string
-	DatabasePort     int
-	DatabaseUser     string
-	DatabasePassword string
-	DatabaseName     string
-	DatabaseSSL      string
-	AzureURL         string
-	EmailFrom        string
-	SMSFrom          string
+	Port             string   // Port the server listens on.
+	ThrottleTTL      int      // Time-to-live for request throttling (seconds).
+	ThrottleLimit    int      // Maximum requests allowed per TTL.
+	GinMode          string   // Gin framework mode (debug, release, etc.).
+	AllowedOrigins   []string // List of allowed CORS origins.
+	DatabaseHost     string   // PostgreSQL host.
+	DatabasePort     int      // PostgreSQL port.
+	DatabaseUser     string   // PostgreSQL user.
+	DatabasePassword string   // PostgreSQL password.
+	DatabaseName     string   // PostgreSQL database name.
+	DatabaseSSL      string   // PostgreSQL SSL mode.
+	AzureURL         string   // Azure service endpoint.
+	EmailFrom        string   // Default sender Email address.
+	SMSFrom          string   // Default sender SMS address.
 }
 
+// Loads environment variables from .env (if present) or from the environment, validates required variables, and sets server timezone to UTC.
+// Called once at startup to initialize application configuration.
+// Returns a pointer to the populated Config struct, or terminates the app if required variables are missing.
 func Load() *Config {
 	godotenv.Load(".env")
 
