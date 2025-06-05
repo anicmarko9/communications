@@ -20,7 +20,6 @@ ADD CONSTRAINT "UQ_Client_phone" UNIQUE ("phone");
 CREATE TABLE
   "leads" (
     "id" SERIAL NOT NULL,
-    "type" VARCHAR(15) NOT NULL,
     "datetime" TIMESTAMP NOT NULL DEFAULT now (),
     "name" VARCHAR(31),
     "email" VARCHAR(255),
