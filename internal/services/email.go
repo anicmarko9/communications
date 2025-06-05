@@ -1,9 +1,16 @@
 package services
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
 
 	"communications/internal/database/dto"
+	"communications/internal/utils"
 )
 
 // Prepares and sends an email notification to the specified recipient.
@@ -14,10 +21,76 @@ func (s *Service) SendEmail(to *string, params *dto.CreateLeadDTO) error {
 		return errors.New("id and payload are required")
 	}
 
-	senderAddress := s.Cfg.EmailFrom
-	recipients := dto.EmailRecipients{To: []dto.EmailRecipientAddress{{Address: *to}}}
-	replyTo := []dto.EmailRecipientAddress{{Address: params.Email}}
-	content := dto.EmailContent{Subject: "New Website Lead", HTML: setHTML(params)}
+	endpoint, key, err := parseACS(s.Cfg.AzureURL)
+	if err != nil {
+		return err
+	}
+
+	message := dto.EmailMessage{
+		SenderAddress: s.Cfg.EmailFrom,
+		Recipients:    dto.EmailRecipients{To: []dto.EmailRecipientAddress{{Address: *to}}},
+		Content:       dto.EmailContent{Subject: "New Website Lead", HTML: setHTML(params)},
+		ReplyTo:       []dto.EmailRecipientAddress{{Address: params.Email}},
+	}
+
+	payload, err := json.Marshal(message)
+	if err != nil {
+		return err
+	}
+
+	azureError := sendAzureEmail(endpoint, key, payload)
+	if azureError != nil {
+		return azureError
+	}
+
+	return nil
+}
+
+// Parses Azure Connection String
+func parseACS(url string) (endpoint, key string, err error) {
+	parts := utils.SplitString(url, ";")
+
+	for _, part := range parts {
+		if strings.HasPrefix(part, "endpoint=") {
+			endpoint = strings.TrimPrefix(part, "endpoint=")
+		}
+
+		if strings.HasPrefix(part, "accesskey=") {
+			key = strings.TrimPrefix(part, "accesskey=")
+		}
+	}
+
+	if endpoint == "" || key == "" {
+		return "", "", errors.New("invalid Azure Connection String")
+	}
+
+	return endpoint, key, nil
+}
+
+// Sends an email via Azure Communication Services Email REST API.
+func sendAzureEmail(endpoint, key string, payload []byte) error {
+	url := fmt.Sprintf("%s/emails:send?api-version=2023-03-31", endpoint)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("api-key", key)
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	bodyBytes, _ := io.ReadAll(res.Body)
+	resBody := string(bodyBytes)
+
+	if res.StatusCode >= 300 {
+		fmt.Printf("Azure Email Service ~ %s: %s\n", res.Status, resBody)
+		return errors.New("failed to send email: " + res.Status)
+	}
 
 	return nil
 }

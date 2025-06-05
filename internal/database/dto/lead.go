@@ -27,3 +27,20 @@ type EmailContent struct {
 	Subject string `json:"subject" binding:"required"` // Subject of the email.
 	HTML    string `json:"html" binding:"required"`    // HTML content of the email.
 }
+
+// This structure is used to create a valid payload for Azure's email API.
+// Designed to satisfy Azure's email API requirements.
+type EmailMessage struct {
+	SenderAddress string                  `json:"senderAddress"` // Email address of the sender.
+	Recipients    EmailRecipients         `json:"recipients"`    // List of email recipients.
+	Content       EmailContent            `json:"content"`       // Content of the email.
+	ReplyTo       []EmailRecipientAddress `json:"replyTo"`       // List of reply-to email addresses.
+}
+
+// This structure is used to create a valid payload for Azure's SMS API.
+// Designed to satisfy Azure's SMS API requirements.
+type SMSMessage struct {
+	From    string   `json:"from" binding:"required"`    // Phone number of the sender.
+	To      []string `json:"to" binding:"required"`      // List of SMS recipients.
+	Message string   `json:"message" binding:"required"` // Textual message content.
+}
