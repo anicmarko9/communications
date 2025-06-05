@@ -19,7 +19,7 @@ func (h *Handler) HealthHandler(c *gin.Context) {
 	service := h.newService()
 
 	if err := service.CheckHealth(); err != nil {
-		utils.Reject(c, http.StatusInternalServerError, "Database connection failed.")
+		utils.Reject(c, http.StatusServiceUnavailable, "Database connection failed.")
 		return
 	}
 
