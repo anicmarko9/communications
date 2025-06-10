@@ -1,0 +1,77 @@
+name: Go
+
+on:
+  push:
+    branches: ['main']
+
+  pull_request:
+    branches: ['main']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+        ports:
+          - ${{ vars.POSTGRES_PORT }}:5432
+
+    env:
+      PORT: ${{ vars.PORT }}
+
+      THROTTLE_TTL: ${{ vars.THROTTLE_TTL }}
+      THROTTLE_LIMIT: ${{ vars.THROTTLE_LIMIT }}
+
+      GIN_MODE: ${{ vars.GIN_MODE }}
+
+      ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
+
+      POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
+      POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
+      POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+      POSTGRES_SSL: ${{ vars.POSTGRES_SSL }}
+
+      AZURE_URL: ${{ secrets.AZURE_URL }}
+      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      SMS_FROM: ${{ secrets.SMS_FROM }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24.2'
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install
+        run: go mod vendor
+
+      - name: Format
+        run: go fmt ./...
+
+      - name: Lint
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build
+        run: go build -mod=vendor -o main.exe ./cmd
