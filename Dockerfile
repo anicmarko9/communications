@@ -9,6 +9,8 @@ RUN go mod vendor
 
 COPY . .
 
+RUN go test ./...
+
 RUN go build -mod=vendor -o main.exe ./cmd
 
 ## Runner
@@ -66,7 +68,7 @@ CMD ["/bin/sh", "-c", "/usr/sbin/sshd -D & ./main.exe"]
 
 # docker build -t go-communications:1.24.2-alpine --no-cache . `
 # --build-arg PORT="5000" `
-# --build-arg THROTTLE_TTL="60000" `
+# --build-arg THROTTLE_TTL="60" `
 # --build-arg THROTTLE_LIMIT="10" `
 # --build-arg GIN_MODE="debug" `
 # --build-arg ALLOWED_ORIGINS="http://localhost:3000" `
