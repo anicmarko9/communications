@@ -40,7 +40,7 @@ func ValidateAndNormalizeName(name *string) bool {
 		return false
 	}
 
-	if len(normalized) <= 2 {
+	if len(normalized) <= 2 || len(normalized) > 32 {
 		return false
 	}
 
